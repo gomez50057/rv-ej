@@ -1,0 +1,53 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(188, 149, 91, 0.22), transparent 32%),
+    linear-gradient(135deg, #0f1720, #171923 56%, #220914);
+  color: #ffffff;
+}
+
+.card {
+  width: min(760px, 100%);
+  padding: 32px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: #dec9a3;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 6vw, 4.4rem);
+  line-height: 0.95;
+}
+
+.card p {
+  max-width: 620px;
+  margin: 0 0 24px;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: #111111;
+  background: #dec9a3;
+  text-decoration: none;
+  font-weight: 800;
+}
