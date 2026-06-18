@@ -3,16 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:network": "next dev -H 0.0.0.0",
-    "build": "next build",
-    "start": "next start"
+    "dev": "next dev --webpack",
+    "dev:3001": "next dev --webpack -p 3001",
+    "dev:network": "next dev --webpack -H 0.0.0.0 -p 3001",
+    "build": "next build --webpack",
+    "start": "next start",
+    "tunnel": "npx localtunnel --port 3001",
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
   "dependencies": {
     "aframe": "^1.7.1",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "^16.2.9",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "eslint": "latest",

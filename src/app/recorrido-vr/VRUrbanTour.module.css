@@ -222,3 +222,17 @@
 .errorOverlay strong {
   color: #dec9a3;
 }
+
+.debugBox {
+  max-height: 240px;
+  overflow: auto;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+}

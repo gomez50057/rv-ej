@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./VRUrbanTour.module.css";
 import {
+  MODEL_INFO,
   TOUR_MODES,
   TOUR_POINTS,
   getNextGuidedPoint,
   getPreviousGuidedPoint,
 } from "@/data/urbanTour";
 
+const AFRAME_LOCAL = "/vendor/aframe-v1.7.1.min.js";
 const AFRAME_CDN = "https://aframe.io/releases/1.7.1/aframe.min.js";
 
 function moveCameraToPoint(point) {
@@ -24,15 +26,19 @@ function moveCameraToPoint(point) {
     easing: "easeInOutQuad",
   });
 
+  const targetRotation = point.cameraLookAt
+    ? getRotationToLookAt(point.cameraRigPosition, point.cameraLookAt)
+    : point.cameraRotation || "0 0 0";
+
   viewOffset.setAttribute("animation__rotate", {
     property: "rotation",
-    to: point.cameraRotation,
+    to: targetRotation,
     dur: 950,
     easing: "easeInOutQuad",
   });
 }
 
-function loadExternalScript(src) {
+function loadScript(src) {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
 
@@ -54,6 +60,29 @@ function loadExternalScript(src) {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+}
+
+function parseVec3(value) {
+  if (!value || typeof value !== "string") return null;
+  const [x, y, z] = value.split(" ").map(Number);
+  if ([x, y, z].some((item) => Number.isNaN(item))) return null;
+  return { x, y, z };
+}
+
+function getRotationToLookAt(positionValue, targetValue) {
+  const position = parseVec3(positionValue);
+  const target = parseVec3(targetValue);
+
+  if (!position || !target) return "0 0 0";
+
+  const dx = target.x - position.x;
+  const dy = target.y - position.y;
+  const dz = target.z - position.z;
+  const horizontal = Math.sqrt(dx * dx + dz * dz) || 0.0001;
+  const pitch = Math.atan2(dy, horizontal) * (180 / Math.PI);
+  const yaw = Math.atan2(-dx, -dz) * (180 / Math.PI);
+
+  return `${pitch.toFixed(2)} ${yaw.toFixed(2)} 0`;
 }
 
 function registerAFrameComponents() {
@@ -88,14 +117,15 @@ function registerAFrameComponents() {
 
   if (!AF.components["look-at-camera"]) {
     AF.registerComponent("look-at-camera", {
-      tick() {
-        const camera = document.querySelector("[camera]");
-        if (!camera) return;
-        this.el.object3D.lookAt(camera.object3D.getWorldPosition(this.target));
+      init() {
+        this.target = new AF.THREE.Vector3();
       },
 
-      init() {
-        this.target = new window.AFRAME.THREE.Vector3();
+      tick() {
+        const camera = document.querySelector("[camera]");
+        if (!camera || !this.target) return;
+        camera.object3D.getWorldPosition(this.target);
+        this.el.object3D.lookAt(this.target);
       },
     });
   }
@@ -103,11 +133,25 @@ function registerAFrameComponents() {
   return true;
 }
 
+function getRuntimeDiagnostics() {
+  if (typeof window === "undefined") return null;
+
+  return {
+    url: window.location.href,
+    isSecureContext: window.isSecureContext,
+    hasAframe: Boolean(window.AFRAME),
+    protocol: window.location.protocol,
+    host: window.location.host,
+    userAgent: window.navigator.userAgent,
+  };
+}
+
 export default function VRUrbanTour() {
   const [aframeStatus, setAframeStatus] = useState("loading");
   const [activeMode, setActiveMode] = useState("maqueta");
   const [activePointId, setActivePointId] = useState("inicio");
   const [uiCompact, setUiCompact] = useState(false);
+  const [diagnostics, setDiagnostics] = useState(null);
 
   const aframeReady = aframeStatus === "ready";
   const aframeFailed = aframeStatus === "error";
@@ -128,6 +172,11 @@ export default function VRUrbanTour() {
   }, [activePointId]);
 
   useEffect(() => {
+    setDiagnostics(getRuntimeDiagnostics());
+    setUiCompact(window.innerWidth <= 768);
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
     let finished = false;
 
@@ -135,41 +184,50 @@ export default function VRUrbanTour() {
       if (!mounted || finished) return;
       finished = true;
       const registered = registerAFrameComponents();
+      setDiagnostics(getRuntimeDiagnostics());
       setAframeStatus(registered ? "ready" : "error");
     };
 
     const finishError = () => {
       if (!mounted || finished) return;
       finished = true;
+      setDiagnostics(getRuntimeDiagnostics());
       setAframeStatus("error");
     };
 
-    const tryCdnFallback = () => {
-      loadExternalScript(AFRAME_CDN).then(finishReady).catch(finishError);
-    };
+    const hardTimeout = window.setTimeout(() => {
+      finishError();
+    }, 12000);
 
     if (window.AFRAME) {
+      window.clearTimeout(hardTimeout);
       finishReady();
       return () => {
         mounted = false;
+        window.clearTimeout(hardTimeout);
       };
     }
 
-    const fallbackTimer = window.setTimeout(() => {
-      if (!finished && !window.AFRAME) {
-        tryCdnFallback();
-      }
-    }, 2500);
-
-    import("aframe")
-      .then(finishReady)
+    loadScript(AFRAME_LOCAL)
+      .then(() => {
+        window.clearTimeout(hardTimeout);
+        finishReady();
+      })
       .catch(() => {
-        if (!finished) tryCdnFallback();
+        loadScript(AFRAME_CDN)
+          .then(() => {
+            window.clearTimeout(hardTimeout);
+            finishReady();
+          })
+          .catch(() => {
+            window.clearTimeout(hardTimeout);
+            finishError();
+          });
       });
 
     return () => {
       mounted = false;
-      window.clearTimeout(fallbackTimer);
+      window.clearTimeout(hardTimeout);
     };
   }, []);
 
@@ -190,7 +248,7 @@ export default function VRUrbanTour() {
 
   useEffect(() => {
     if (!aframeReady || !activePoint) return;
-    moveCameraToPoint(activePoint);
+    window.requestAnimationFrame(() => moveCameraToPoint(activePoint));
   }, [aframeReady, activePoint]);
 
   const handleModeChange = (modeId) => {
@@ -227,7 +285,7 @@ export default function VRUrbanTour() {
           <div className={styles.loadingCard}>
             <p className={styles.kicker}>VR / Cardboard</p>
             <h1>Cargando experiencia...</h1>
-            <p>Inicializando A-Frame y preparando la maqueta urbana.</p>
+            <p>Inicializando A-Frame desde archivo local para compatibilidad móvil.</p>
           </div>
         </div>
       )}
@@ -238,10 +296,14 @@ export default function VRUrbanTour() {
             <p className={styles.kicker}>Error de carga</p>
             <h1>No se pudo cargar A-Frame</h1>
             <p>
-              Revisa que hayas ejecutado <strong>npm install</strong> y que exista la
-              dependencia <strong>aframe</strong>. También puedes revisar la consola del
-              navegador para ver el error exacto.
+              Revisa que estés entrando desde una URL accesible para el celular y que el
+              archivo <strong>/vendor/aframe-v1.7.1.min.js</strong> exista en la carpeta
+              <strong> public/vendor/</strong>.
             </p>
+
+            {diagnostics && (
+              <pre className={styles.debugBox}>{JSON.stringify(diagnostics, null, 2)}</pre>
+            )}
           </div>
         </div>
       )}
@@ -250,10 +312,9 @@ export default function VRUrbanTour() {
         <section className={styles.topCard}>
           <div>
             <p className={styles.kicker}>Recorrido VR / Cardboard</p>
-            <h1>Maqueta urbana interactiva</h1>
+            <h1>Parque urbano VR</h1>
             <p className={styles.description}>
-              Mira una esfera durante 1.4 segundos para saltar a esa zona. En celular,
-              presiona el ícono de VR y usa el visor.
+              Modelo cargado: city_park_at_sunset.glb. Mira una esfera durante 1.4 segundos para saltar a esa zona.
             </p>
           </div>
 
@@ -317,83 +378,91 @@ export default function VRUrbanTour() {
         </section>
       </div>
 
-      <a-scene
-        embedded
-        vr-mode-ui="enabled: true"
-        loading-screen="enabled: false"
-        renderer="antialias: true; colorManagement: true"
-        raycaster="objects: .clickable"
-      >
-        <a-assets>
-          <a-asset-item id="urban-model" src="/models/maqueta-urbana.glb"></a-asset-item>
-        </a-assets>
+      {aframeReady && (
+        <a-scene
+          embedded
+          vr-mode-ui="enabled: true"
+          xr-mode-ui="enabled: true"
+          device-orientation-permission-ui="enabled: true"
+          loading-screen="enabled: false"
+          renderer="antialias: false; colorManagement: true; precision: mediump; powerPreference: high-performance"
+          raycaster="objects: .clickable; far: 120"
+        >
+          <a-assets timeout="30000">
+            <a-asset-item id="urban-model" src={MODEL_INFO.file}></a-asset-item>
+          </a-assets>
 
-        <a-sky color="#101820"></a-sky>
+          <a-sky color="#101820"></a-sky>
 
-        <a-light type="ambient" intensity="0.9"></a-light>
-        <a-light type="directional" intensity="1.2" position="4 8 6"></a-light>
-        <a-light type="point" intensity="0.4" position="-4 4 2"></a-light>
+          <a-light type="ambient" intensity="0.95"></a-light>
+          <a-light type="directional" intensity="1.15" position="4 8 6"></a-light>
+          <a-light type="point" intensity="0.35" position="-4 4 2"></a-light>
 
-        <a-entity
-          id="urban-model-entity"
-          gltf-model="#urban-model"
-          position="0 0 -5"
-          rotation="0 180 0"
-          scale="1 1 1"
-        ></a-entity>
+          <a-entity
+            id="urban-model-entity"
+            gltf-model="#urban-model"
+            position="0 0 0"
+            rotation="0 0 0"
+            scale="1 1 1"
+          ></a-entity>
 
-        {visiblePoints.map((point) => (
-          <a-entity key={point.id} position={point.hotspotPosition} look-at-camera="">
-            <a-sphere
-              radius="0.2"
-              color={activePointId === point.id ? "#bc955b" : "#691b32"}
-              className="clickable"
-              gaze-jump={`targetId: ${point.id}`}
-              animation="property: position; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 0 0.12 0"
-            ></a-sphere>
+          {visiblePoints.map((point) => (
+            <a-entity key={point.id} position={point.hotspotPosition} look-at-camera="">
+              <a-sphere
+                radius="0.22"
+                color={activePointId === point.id ? "#bc955b" : "#691b32"}
+                className="clickable"
+                gaze-jump={`targetId: ${point.id}`}
+                animation="property: position; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 0 0.12 0"
+              ></a-sphere>
 
-            <a-text
-              value={point.title}
-              align="center"
-              position="0 0.48 0"
-              color="#ffffff"
-              width="3.8"
-              side="double"
-            ></a-text>
+              <a-text
+                value={point.title}
+                align="center"
+                position="0 0.52 0"
+                color="#ffffff"
+                width="3.8"
+                side="double"
+              ></a-text>
+            </a-entity>
+          ))}
+
+          <a-entity id="camera-rig" position="0 25 54">
+            <a-entity id="view-offset" rotation="-24.78 0 0">
+              <a-camera
+                id="camera-head"
+                look-controls="pointerLockEnabled: false; magicWindowTrackingEnabled: true"
+                wasd-controls-enabled="false"
+              >
+                <a-entity position="0 -0.58 -1.4">
+                  <a-plane
+                    width="1.65"
+                    height="0.34"
+                    color="#000000"
+                    opacity="0.52"
+                    material="transparent: true"
+                  ></a-plane>
+                  <a-text
+                    value={`Punto: ${activePoint?.title || "Inicio"}`}
+                    align="center"
+                    position="0 0 0.01"
+                    color="#ffffff"
+                    width="1.55"
+                  ></a-text>
+                </a-entity>
+
+                <a-cursor
+                  fuse="true"
+                  fuse-timeout="1400"
+                  raycaster="objects: .clickable; far: 120"
+                  geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.022"
+                  material="color: white; shader: flat"
+                ></a-cursor>
+              </a-camera>
+            </a-entity>
           </a-entity>
-        ))}
-
-        <a-entity id="camera-rig" position="0 8 14">
-          <a-entity id="view-offset" rotation="-22 180 0">
-            <a-camera id="camera-head" look-controls="pointerLockEnabled: false" wasd-controls-enabled="false">
-              <a-entity position="0 -0.58 -1.4">
-                <a-plane
-                  width="1.65"
-                  height="0.34"
-                  color="#000000"
-                  opacity="0.52"
-                  material="transparent: true"
-                ></a-plane>
-                <a-text
-                  value={`Punto: ${activePoint?.title || "Inicio"}`}
-                  align="center"
-                  position="0 0 0.01"
-                  color="#ffffff"
-                  width="1.55"
-                ></a-text>
-              </a-entity>
-
-              <a-cursor
-                fuse="true"
-                fuse-timeout="1400"
-                raycaster="objects: .clickable"
-                geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.022"
-                material="color: white; shader: flat"
-              ></a-cursor>
-            </a-camera>
-          </a-entity>
-        </a-entity>
-      </a-scene>
+        </a-scene>
+      )}
     </main>
   );
 }
