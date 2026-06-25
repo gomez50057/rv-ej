@@ -122,6 +122,28 @@
 
   const $ = (selector) => document.querySelector(selector);
 
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function isLandscapeViewport() {
+    return window.matchMedia("(orientation: landscape)").matches;
+  }
+
+  function syncViewportClasses() {
+    document.body.classList.toggle("mobile-ui", isMobileViewport());
+    document.body.classList.toggle("landscape-ui", isLandscapeViewport());
+  }
+
+  function setToggleButtonLabel() {
+    const overlay = $("#overlay");
+    const button = $("#toggle-panel");
+    if (!overlay || !button) return;
+    const compact = overlay.classList.contains("compact");
+    button.textContent = compact ? "Controles" : "Ocultar";
+    button.setAttribute("aria-expanded", String(!compact));
+  }
+
   function parseVec3(value) {
     const parts = String(value).trim().split(/\s+/).map(Number);
     if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
@@ -386,13 +408,17 @@
         }
       } catch (error) {}
       isLensMode = false;
+      document.body.classList.remove("lens-mode");
       button.textContent = "Entrar modo lentes / Cardboard";
       message.textContent = "Modo lentes desactivado. También puedes usar el ícono VR nativo de la esquina.";
-      overlay.classList.remove("compact");
+      if (!isMobileViewport()) overlay.classList.remove("compact");
+      setToggleButtonLabel();
       return;
     }
 
     overlay.classList.add("compact");
+    document.body.classList.add("lens-mode");
+    setToggleButtonLabel();
     button.textContent = "Salir de modo lentes";
     message.textContent = "Activando pantalla completa y Cardboard...";
     await requestMobileFullscreen();
@@ -401,6 +427,7 @@
       if (typeof scene.enterVR === "function") {
         scene.enterVR();
         isLensMode = true;
+        document.body.classList.add("lens-mode");
         message.textContent =
           "Modo lentes solicitado. Si no se divide la pantalla, usa la URL HTTPS o toca el ícono VR nativo que aparece en la escena.";
       } else {
@@ -408,6 +435,7 @@
       }
     } catch (error) {
       isLensMode = false;
+      document.body.classList.remove("lens-mode");
       button.textContent = "Entrar modo lentes / Cardboard";
       message.textContent =
         "El navegador bloqueó VR/Cardboard. Prueba con HTTPS, Android Chrome/Samsung Internet y permisos de sensores.";
@@ -448,6 +476,10 @@
   }
 
   function init() {
+    syncViewportClasses();
+    window.addEventListener("resize", syncViewportClasses);
+    window.addEventListener("orientationchange", () => setTimeout(syncViewportClasses, 250));
+
     setStatus("Buscando window.AFRAME...");
 
     if (!window.AFRAME) {
@@ -463,6 +495,12 @@
     renderModeButtons();
     renderHotspots();
     updateUI();
+
+    const overlay = $("#overlay");
+    if (overlay && isMobileViewport()) {
+      overlay.classList.add("compact");
+    }
+    setToggleButtonLabel();
 
     const model = $("#urban-model");
     const modelPill = $("#model-pill");
@@ -483,9 +521,7 @@
     $("#toggle-panel").addEventListener("click", () => {
       const overlay = $("#overlay");
       overlay.classList.toggle("compact");
-      $("#toggle-panel").textContent = overlay.classList.contains("compact")
-        ? "Mostrar panel"
-        : "Ocultar panel";
+      setToggleButtonLabel();
     });
 
     $("#previous-point").addEventListener("click", () => {
@@ -510,12 +546,16 @@
     if (scene) {
       scene.addEventListener("enter-vr", () => {
         isLensMode = true;
+        document.body.classList.add("lens-mode");
         $("#lens-button").textContent = "Salir de modo lentes";
         $("#overlay").classList.add("compact");
+        setToggleButtonLabel();
       });
       scene.addEventListener("exit-vr", () => {
         isLensMode = false;
-        $("#lens-button").textContent = "Entrar modo lentes / VR";
+        document.body.classList.remove("lens-mode");
+        $("#lens-button").textContent = "Entrar modo lentes / Cardboard";
+        setToggleButtonLabel();
       });
     }
 

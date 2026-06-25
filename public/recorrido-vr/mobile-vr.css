@@ -11,10 +11,14 @@ body {
   background: #101820;
   color: #ffffff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  touch-action: manipulation;
 }
 
 button {
   font: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .boot {
@@ -43,6 +47,10 @@ button {
   margin: 0 0 10px;
 }
 
+.boot-card p {
+  line-height: 1.5;
+}
+
 .boot-status {
   margin-top: 14px;
   color: #dec9a3;
@@ -53,12 +61,13 @@ button {
   position: relative;
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: #101820;
 }
 
 .is-hidden {
-  display: none;
+  display: none !important;
 }
 
 .kicker {
@@ -73,13 +82,14 @@ button {
 .overlay {
   position: fixed;
   z-index: 20;
-  top: 14px;
-  left: 14px;
-  right: 14px;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  right: max(14px, env(safe-area-inset-right));
   display: grid;
   grid-template-columns: 1.2fr 0.92fr 1fr;
   gap: 14px;
   pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .overlay.compact .mode-panel,
@@ -95,12 +105,14 @@ button {
   background: rgba(0, 0, 0, 0.58);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(12px);
   pointer-events: auto;
 }
 
 .top-card {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
@@ -114,6 +126,7 @@ button {
 
 .top-card h1 {
   font-size: clamp(1.35rem, 3vw, 2.2rem);
+  line-height: 1.02;
 }
 
 .description,
@@ -145,6 +158,7 @@ button {
 .mode-button,
 .ghost-button,
 .guide-controls button {
+  min-height: 40px;
   border-radius: 999px;
   padding: 9px 12px;
   color: #ffffff;
@@ -175,10 +189,12 @@ button {
   gap: 8px;
   margin-top: 12px;
   padding-right: 4px;
+  scrollbar-width: thin;
 }
 
 .point-item {
   width: 100%;
+  min-height: 42px;
   border-radius: 12px;
   padding: 10px 12px;
   text-align: left;
@@ -194,7 +210,7 @@ button {
   position: fixed;
   z-index: 35;
   left: 50%;
-  bottom: 14px;
+  bottom: max(14px, env(safe-area-inset-bottom));
   width: min(520px, calc(100% - 24px));
   transform: translateX(-50%);
   display: flex;
@@ -206,12 +222,14 @@ button {
   background: rgba(0, 0, 0, 0.62);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(12px);
   pointer-events: auto;
 }
 
 .lens-button {
   width: 100%;
+  min-height: 54px;
   border: 0;
   border-radius: 999px;
   padding: 15px 18px;
@@ -230,6 +248,10 @@ button {
   line-height: 1.35;
   text-align: center;
   opacity: 0.92;
+}
+
+.mobile-hint {
+  display: none;
 }
 
 .model-pill {
@@ -254,56 +276,14 @@ button {
   background: rgba(105, 27, 50, 0.88);
 }
 
-@media (max-width: 1120px) {
-  .overlay {
-    grid-template-columns: 1fr;
-    max-width: 440px;
-  }
+body.lens-mode .overlay,
+body.lens-mode .model-pill {
+  opacity: 0;
+  pointer-events: none;
 }
 
-@media (max-width: 768px) {
-  .overlay {
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    gap: 10px;
-    max-width: none;
-  }
-
-  .top-card,
-  .mode-panel,
-  .info-panel {
-    padding: 12px;
-    border-radius: 16px;
-  }
-
-  .top-card {
-    align-items: flex-start;
-  }
-
-  .description {
-    display: none;
-  }
-
-  .point-list {
-    max-height: 28vh;
-  }
-
-  .lens-controls {
-    bottom: 10px;
-    width: calc(100% - 20px);
-    padding: 10px;
-    border-radius: 16px;
-  }
-
-  .lens-button {
-    padding: 14px 16px;
-    font-size: 0.96rem;
-  }
-
-  .lens-controls p {
-    font-size: 0.76rem;
-  }
+body.lens-mode .lens-controls {
+  opacity: 0.78;
 }
 
 /* Botón VR nativo de A-Frame visible para Cardboard */
@@ -321,12 +301,242 @@ button {
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45) !important;
 }
 
+@media (max-width: 1120px) {
+  .overlay {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+  }
+}
+
 @media (max-width: 768px) {
+  .app {
+    height: 100dvh;
+  }
+
+  .boot {
+    padding: 14px;
+  }
+
+  .boot-card {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .boot-card h1 {
+    font-size: 1.35rem;
+  }
+
+  .overlay {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: auto;
+    max-width: none;
+    gap: 8px;
+    grid-template-columns: 1fr;
+  }
+
+  .overlay:not(.compact) {
+    bottom: calc(104px + env(safe-area-inset-bottom));
+    overflow: auto;
+    padding-bottom: 4px;
+    overscroll-behavior: contain;
+  }
+
+  .top-card,
+  .mode-panel,
+  .info-panel {
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.64);
+  }
+
+  .top-card {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .kicker {
+    margin-bottom: 2px;
+    font-size: 0.64rem;
+  }
+
+  .top-card h1 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.05;
+  }
+
+  .description,
+  .mode-help,
+  .info-panel p {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .description {
+    display: none;
+  }
+
+  .mode-panel h2,
+  .info-panel h2 {
+    font-size: 0.82rem;
+    margin-bottom: 6px;
+    opacity: 0.88;
+  }
+
+  .info-panel h3 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .mode-buttons {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .mode-buttons::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mode-button,
+  .ghost-button,
+  .guide-controls button {
+    min-height: 42px;
+    padding: 9px 12px;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .ghost-button {
+    min-width: 104px;
+    background: #bc955b;
+    color: #111111;
+  }
+
+  .guide-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .point-list {
+    max-height: 24dvh;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .point-item {
+    min-height: 40px;
+    padding: 9px 10px;
+    border-radius: 11px;
+    font-size: 0.84rem;
+  }
+
   .lens-controls {
-    left: 10px;
+    left: max(8px, env(safe-area-inset-left));
     right: auto;
-    bottom: 10px;
-    width: min(300px, calc(100% - 104px));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(286px, calc(100% - 98px));
     transform: none;
+    gap: 4px;
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .lens-button {
+    min-height: 50px;
+    padding: 12px 13px;
+    font-size: 0.88rem;
+    line-height: 1.05;
+  }
+
+  .lens-controls p {
+    display: none;
+  }
+
+  .lens-controls .mobile-hint {
+    display: block;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    opacity: 0.84;
+  }
+
+  .model-pill {
+    top: auto;
+    bottom: calc(104px + env(safe-area-inset-bottom));
+    width: calc(100% - 20px);
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+  }
+
+  .a-enter-vr-button {
+    width: 70px !important;
+    height: 70px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .lens-controls {
+    width: min(246px, calc(100% - 92px));
+  }
+
+  .lens-button {
+    font-size: 0.8rem;
+  }
+
+  .a-enter-vr-button {
+    width: 66px !important;
+    height: 66px !important;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .overlay {
+    max-width: 380px;
+  }
+
+  .overlay:not(.compact) {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 16px);
+  }
+
+  .top-card,
+  .mode-panel,
+  .info-panel {
+    padding: 8px 10px;
+  }
+
+  .top-card h1 {
+    font-size: 0.92rem;
+  }
+
+  .kicker,
+  .mode-help,
+  #point-description {
+    display: none;
+  }
+
+  .point-list {
+    max-height: 34dvh;
+  }
+
+  .lens-controls {
+    width: 230px;
+    padding: 6px;
+  }
+
+  .lens-button {
+    min-height: 44px;
+    font-size: 0.78rem;
+  }
+
+  .model-pill {
+    bottom: 72px;
+    width: min(420px, calc(100% - 120px));
   }
 }

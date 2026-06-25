@@ -85,3 +85,28 @@ Además conserva el botón propio `Entrar modo lentes / Cardboard`. En móvil de
 - ícono VR nativo de A-Frame abajo a la derecha.
 
 Si el ícono aparece pero no divide pantalla, usa HTTPS para probar en celular.
+
+
+## Ajuste móvil de esta versión
+
+Esta versión conserva el ícono nativo de VR/Cardboard y mejora la visualización en teléfono:
+
+- En móvil inicia con los paneles compactos para no tapar la maqueta.
+- El botón `Controles` abre/cierra modos, punto actual y lista de navegación.
+- El botón `Entrar modo lentes / Cardboard` queda abajo a la izquierda para no encimarse con el ícono VR nativo de A-Frame.
+- El ícono VR nativo queda visible abajo a la derecha.
+- En modo lentes se ocultan los paneles para que no estorben.
+- Se usan alturas `100dvh`, márgenes seguros `safe-area` y botones más grandes para toque móvil.
+
+Ruta recomendada en móvil:
+
+```txt
+http://TU-IP-REAL:3001/recorrido-vr/index.html
+```
+
+Para mejor compatibilidad Cardboard/WebXR, probar también con HTTPS mediante túnel:
+
+```bash
+npm run dev:network
+npm run tunnel
+```
