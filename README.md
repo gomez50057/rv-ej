@@ -121,3 +121,21 @@ La ruta estática `/recorrido-vr/index.html` ahora usa una cámara inicial más 
 - near/far: `0.05 / 180`
 
 Cada punto del recorrido tiene posiciones móviles propias (`mobileCameraRigPosition` y `mobileCameraLookAt`). En teléfono o pantalla táctil se usan automáticamente para evitar encuadres demasiado pegados al modelo.
+
+## Versión alto nivel Cardboard por mirada
+
+La ruta recomendada es:
+
+```txt
+/recorrido-vr/index.html
+```
+
+Esta versión está enfocada a Google Cardboard / VR Box y permite operar el recorrido con mirada fija:
+
+- mirar Siguiente para avanzar;
+- mirar Anterior para regresar;
+- mirar Info para abrir o cerrar ficha;
+- mirar Cambiar para alternar entre Vista maqueta, Vista peatonal y Vista guiada;
+- mirar hotspots grandes dentro de la maqueta para saltar directo a una zona.
+
+El botón VR/Cardboard nativo de A-Frame queda visible y también hay un botón propio “Entrar modo lentes / Cardboard”.

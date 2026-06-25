@@ -11,14 +11,12 @@ body {
   background: #101820;
   color: #ffffff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
   touch-action: manipulation;
 }
 
 button {
   font: inherit;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .boot {
@@ -29,32 +27,51 @@ button {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(188, 149, 91, 0.22), transparent 32%),
-    linear-gradient(135deg, #101820, #171923 56%, #220914);
+    radial-gradient(circle at 18% 18%, rgba(188, 149, 91, 0.26), transparent 28%),
+    radial-gradient(circle at 80% 80%, rgba(105, 27, 50, 0.36), transparent 32%),
+    linear-gradient(135deg, #101820, #171923 58%, #220914);
 }
 
 .boot-card {
-  width: min(560px, 100%);
-  padding: 28px;
-  border-radius: 28px;
+  width: min(580px, 100%);
+  padding: 30px;
+  border-radius: 30px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.085);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px);
 }
 
 .boot-card h1 {
   margin: 0 0 10px;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  line-height: 1.02;
 }
 
 .boot-card p {
-  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 460px;
+  line-height: 1.55;
+  opacity: 0.92;
 }
 
 .boot-status {
-  margin-top: 14px;
+  margin-top: 16px !important;
   color: #dec9a3;
-  font-weight: 800;
+  font-weight: 900;
+}
+
+.debug-block {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  text-align: left;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 14px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
 }
 
 .app {
@@ -73,9 +90,9 @@ button {
 .kicker {
   margin: 0 0 6px;
   color: #dec9a3;
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
@@ -86,7 +103,7 @@ button {
   left: max(14px, env(safe-area-inset-left));
   right: max(14px, env(safe-area-inset-right));
   display: grid;
-  grid-template-columns: 1.2fr 0.92fr 1fr;
+  grid-template-columns: 1.15fr 0.9fr 1.05fr;
   gap: 14px;
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -101,12 +118,12 @@ button {
 .mode-panel,
 .info-panel {
   padding: 16px 18px;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.58);
+  border-radius: 22px;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.27);
+  backdrop-filter: blur(14px);
   pointer-events: auto;
 }
 
@@ -125,8 +142,21 @@ button {
 }
 
 .top-card h1 {
-  font-size: clamp(1.35rem, 3vw, 2.2rem);
+  font-size: clamp(1.35rem, 3vw, 2.25rem);
   line-height: 1.02;
+}
+
+.mode-panel h2,
+.info-panel h2 {
+  font-size: 0.82rem;
+  color: #dec9a3;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.info-panel h3 {
+  font-size: 1.1rem;
+  line-height: 1.15;
 }
 
 .description,
@@ -134,7 +164,25 @@ button {
 .info-panel p {
   margin: 0;
   line-height: 1.45;
-  opacity: 0.9;
+  opacity: 0.92;
+}
+
+.info-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.point-index {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #bc955b;
+  color: #111111;
+  font-size: 0.82rem;
+  font-weight: 950;
 }
 
 .mode-buttons,
@@ -142,7 +190,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
   margin-bottom: 10px;
 }
 
@@ -158,9 +206,9 @@ button {
 .mode-button,
 .ghost-button,
 .guide-controls button {
-  min-height: 40px;
+  min-height: 42px;
   border-radius: 999px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.12);
 }
@@ -194,12 +242,12 @@ button {
 
 .point-item {
   width: 100%;
-  min-height: 42px;
-  border-radius: 12px;
+  min-height: 44px;
+  border-radius: 14px;
   padding: 10px 12px;
   text-align: left;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.095);
 }
 
 .point-item.active {
@@ -211,25 +259,25 @@ button {
   z-index: 35;
   left: 50%;
   bottom: max(14px, env(safe-area-inset-bottom));
-  width: min(520px, calc(100% - 24px));
+  width: min(560px, calc(100% - 24px));
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding: 12px;
-  border-radius: 20px;
+  border-radius: 22px;
   background: rgba(0, 0, 0, 0.62);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(14px);
   pointer-events: auto;
 }
 
 .lens-button {
   width: 100%;
-  min-height: 54px;
+  min-height: 56px;
   border: 0;
   border-radius: 999px;
   padding: 15px 18px;
@@ -239,7 +287,7 @@ button {
   font-size: 1rem;
   font-weight: 950;
   letter-spacing: 0.01em;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.31);
 }
 
 .lens-controls p {
@@ -259,17 +307,17 @@ button {
   z-index: 34;
   top: 50%;
   left: 50%;
+  width: min(420px, calc(100% - 32px));
   transform: translate(-50%, -50%);
-  width: min(560px, calc(100% - 28px));
-  padding: 14px 18px;
+  padding: 14px 16px;
   border-radius: 18px;
   color: #ffffff;
   text-align: center;
-  line-height: 1.45;
-  background: rgba(0, 0, 0, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
-  pointer-events: none;
 }
 
 .model-pill.error {
@@ -277,266 +325,154 @@ button {
 }
 
 body.lens-mode .overlay,
-body.lens-mode .model-pill {
+body.lens-mode .lens-controls {
   opacity: 0;
   pointer-events: none;
+  transform: translateY(10px);
 }
 
 body.lens-mode .lens-controls {
-  opacity: 0.78;
+  transform: translate(-50%, 10px);
 }
 
-/* Botón VR nativo de A-Frame visible para Cardboard */
-.a-enter-vr,
-.a-enter-ar {
-  z-index: 80 !important;
+body.lens-mode .model-pill {
+  display: none;
 }
 
-.a-enter-vr-button {
-  width: 74px !important;
-  height: 74px !important;
-  border-radius: 999px !important;
-  background-color: rgba(188, 149, 91, 0.94) !important;
-  border: 3px solid rgba(255, 255, 255, 0.88) !important;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45) !important;
+body.lens-mode .a-enter-vr,
+body.lens-mode .a-enter-ar {
+  opacity: 0.22;
 }
 
-@media (max-width: 1120px) {
+.a-enter-vr {
+  z-index: 60 !important;
+}
+
+@media (max-width: 1100px) {
   .overlay {
     grid-template-columns: 1fr;
-    max-width: 440px;
+    width: min(430px, calc(100% - 28px));
+    right: auto;
+  }
+
+  .overlay:not(.compact) {
+    max-height: calc(100dvh - 170px);
+    overflow: auto;
+    padding-right: 2px;
   }
 }
 
 @media (max-width: 768px) {
-  .app {
-    height: 100dvh;
-  }
-
   .boot {
-    padding: 14px;
+    padding: 16px;
   }
 
   .boot-card {
-    padding: 20px;
-    border-radius: 22px;
-  }
-
-  .boot-card h1 {
-    font-size: 1.35rem;
+    padding: 22px;
+    border-radius: 24px;
   }
 
   .overlay {
-    top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-    bottom: auto;
-    max-width: none;
-    gap: 8px;
-    grid-template-columns: 1fr;
-  }
-
-  .overlay:not(.compact) {
-    bottom: calc(104px + env(safe-area-inset-bottom));
-    overflow: auto;
-    padding-bottom: 4px;
-    overscroll-behavior: contain;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    width: auto;
+    gap: 10px;
   }
 
   .top-card,
   .mode-panel,
   .info-panel {
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(0, 0, 0, 0.64);
-  }
-
-  .top-card {
-    align-items: center;
-    gap: 10px;
-  }
-
-  .kicker {
-    margin-bottom: 2px;
-    font-size: 0.64rem;
+    padding: 13px 14px;
+    border-radius: 18px;
   }
 
   .top-card h1 {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.05;
-  }
-
-  .description,
-  .mode-help,
-  .info-panel p {
-    font-size: 0.82rem;
-    line-height: 1.35;
+    font-size: 1.18rem;
   }
 
   .description {
+    font-size: 0.86rem;
+  }
+
+  .overlay.compact .top-card {
+    max-width: 100%;
+  }
+
+  .overlay.compact .description {
     display: none;
   }
 
-  .mode-panel h2,
-  .info-panel h2 {
-    font-size: 0.82rem;
-    margin-bottom: 6px;
-    opacity: 0.88;
-  }
-
-  .info-panel h3 {
-    font-size: 1rem;
-    margin-bottom: 6px;
-  }
-
-  .mode-buttons {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .mode-buttons::-webkit-scrollbar {
-    display: none;
+  .overlay.compact .top-card h1 {
+    margin-bottom: 0;
   }
 
   .mode-button,
   .ghost-button,
-  .guide-controls button {
-    min-height: 42px;
-    padding: 9px 12px;
-    font-size: 0.84rem;
-    white-space: nowrap;
-  }
-
-  .ghost-button {
-    min-width: 104px;
-    background: #bc955b;
-    color: #111111;
-  }
-
-  .guide-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 10px 0;
+  .guide-controls button,
+  .point-item {
+    min-height: 46px;
   }
 
   .point-list {
-    max-height: 24dvh;
-    gap: 6px;
-    margin-top: 8px;
-  }
-
-  .point-item {
-    min-height: 40px;
-    padding: 9px 10px;
-    border-radius: 11px;
-    font-size: 0.84rem;
+    max-height: 28vh;
   }
 
   .lens-controls {
-    left: max(8px, env(safe-area-inset-left));
-    right: auto;
-    bottom: max(8px, env(safe-area-inset-bottom));
-    width: min(286px, calc(100% - 98px));
-    transform: none;
-    gap: 4px;
-    padding: 8px;
-    border-radius: 16px;
+    width: calc(100% - 18px);
+    padding: 10px;
+    border-radius: 18px;
   }
 
   .lens-button {
-    min-height: 50px;
-    padding: 12px 13px;
-    font-size: 0.88rem;
-    line-height: 1.05;
+    min-height: 58px;
+  }
+
+  .mobile-hint {
+    display: block;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .overlay {
+    width: min(360px, calc(100% - 22px));
+  }
+
+  .overlay.compact .top-card {
+    padding: 10px 12px;
+  }
+
+  .overlay.compact .top-card .kicker,
+  .overlay.compact .top-card .description {
+    display: none;
+  }
+
+  .overlay.compact .top-card h1 {
+    font-size: 1rem;
+  }
+
+  .lens-controls {
+    left: auto;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: min(320px, calc(50% - 18px));
+    transform: none;
+    align-items: stretch;
   }
 
   .lens-controls p {
     display: none;
   }
 
-  .lens-controls .mobile-hint {
-    display: block;
-    font-size: 0.68rem;
-    line-height: 1.2;
-    opacity: 0.84;
-  }
-
-  .model-pill {
-    top: auto;
-    bottom: calc(104px + env(safe-area-inset-bottom));
-    width: calc(100% - 20px);
-    padding: 10px 12px;
-    border-radius: 14px;
-    font-size: 0.8rem;
-  }
-
-  .a-enter-vr-button {
-    width: 70px !important;
-    height: 70px !important;
+  body.lens-mode .lens-controls {
+    transform: translateY(10px);
   }
 }
 
-@media (max-width: 390px) {
-  .lens-controls {
-    width: min(246px, calc(100% - 92px));
-  }
-
-  .lens-button {
-    font-size: 0.8rem;
-  }
-
-  .a-enter-vr-button {
-    width: 66px !important;
-    height: 66px !important;
-  }
-}
-
-@media (max-height: 520px) and (orientation: landscape) {
-  .overlay {
-    max-width: 380px;
-  }
-
-  .overlay:not(.compact) {
-    bottom: max(8px, env(safe-area-inset-bottom));
-    max-height: calc(100dvh - 16px);
-  }
-
-  .top-card,
-  .mode-panel,
-  .info-panel {
-    padding: 8px 10px;
-  }
-
-  .top-card h1 {
-    font-size: 0.92rem;
-  }
-
-  .kicker,
-  .mode-help,
-  #point-description {
-    display: none;
-  }
-
-  .point-list {
-    max-height: 34dvh;
-  }
-
-  .lens-controls {
-    width: 230px;
-    padding: 6px;
-  }
-
-  .lens-button {
-    min-height: 44px;
-    font-size: 0.78rem;
-  }
-
-  .model-pill {
-    bottom: 72px;
-    width: min(420px, calc(100% - 120px));
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
   }
 }
