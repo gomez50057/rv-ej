@@ -386,15 +386,15 @@
         }
       } catch (error) {}
       isLensMode = false;
-      button.textContent = "Entrar modo lentes / VR";
-      message.textContent = "Modo lentes desactivado.";
+      button.textContent = "Entrar modo lentes / Cardboard";
+      message.textContent = "Modo lentes desactivado. También puedes usar el ícono VR nativo de la esquina.";
       overlay.classList.remove("compact");
       return;
     }
 
     overlay.classList.add("compact");
     button.textContent = "Salir de modo lentes";
-    message.textContent = "Activando pantalla completa y VR/Cardboard...";
+    message.textContent = "Activando pantalla completa y Cardboard...";
     await requestMobileFullscreen();
 
     try {
@@ -402,13 +402,13 @@
         scene.enterVR();
         isLensMode = true;
         message.textContent =
-          "Modo lentes solicitado. Si no se divide la pantalla, el navegador bloqueó WebXR; prueba con HTTPS o Samsung Internet/Chrome Android.";
+          "Modo lentes solicitado. Si no se divide la pantalla, usa la URL HTTPS o toca el ícono VR nativo que aparece en la escena.";
       } else {
         message.textContent = "La escena cargó, pero este navegador no expone enterVR().";
       }
     } catch (error) {
       isLensMode = false;
-      button.textContent = "Entrar modo lentes / VR";
+      button.textContent = "Entrar modo lentes / Cardboard";
       message.textContent =
         "El navegador bloqueó VR/Cardboard. Prueba con HTTPS, Android Chrome/Samsung Internet y permisos de sensores.";
     }

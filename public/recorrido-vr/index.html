@@ -65,18 +65,17 @@
 
       <div class="lens-controls">
         <button id="lens-button" type="button" class="lens-button">
-          Entrar modo lentes / VR
+          Entrar modo lentes / Cardboard
         </button>
         <p id="lens-message">
-          Presiona el botón para solicitar pantalla completa y modo VR/Cardboard.
+          Presiona este botón o el ícono VR nativo de A-Frame para activar Cardboard.
         </p>
       </div>
 
       <a-scene
         id="scene"
         embedded
-        vr-mode-ui="enabled: false"
-        xr-mode-ui="enabled: false"
+        vr-mode-ui="enabled: true"
         device-orientation-permission-ui="enabled: true"
         loading-screen="enabled: false"
         renderer="antialias: false; colorManagement: true; precision: mediump; powerPreference: high-performance"

@@ -70,3 +70,18 @@ http://TU-IP-REAL:3001/recorrido-vr/mobile-vr.js
 ```
 
 Si esas rutas no abren, el problema es IP, puerto, firewall o red. Si abren, la página estática debe inicializar el visor.
+
+## Botón VR / Cardboard
+
+Esta versión vuelve a activar el botón nativo de A-Frame con:
+
+```html
+vr-mode-ui="enabled: true"
+```
+
+Además conserva el botón propio `Entrar modo lentes / Cardboard`. En móvil debes ver:
+
+- botón propio abajo a la izquierda,
+- ícono VR nativo de A-Frame abajo a la derecha.
+
+Si el ícono aparece pero no divide pantalla, usa HTTPS para probar en celular.

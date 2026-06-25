@@ -305,3 +305,28 @@ button {
     font-size: 0.76rem;
   }
 }
+
+/* Botón VR nativo de A-Frame visible para Cardboard */
+.a-enter-vr,
+.a-enter-ar {
+  z-index: 80 !important;
+}
+
+.a-enter-vr-button {
+  width: 74px !important;
+  height: 74px !important;
+  border-radius: 999px !important;
+  background-color: rgba(188, 149, 91, 0.94) !important;
+  border: 3px solid rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45) !important;
+}
+
+@media (max-width: 768px) {
+  .lens-controls {
+    left: 10px;
+    right: auto;
+    bottom: 10px;
+    width: min(300px, calc(100% - 104px));
+    transform: none;
+  }
+}
