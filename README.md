@@ -1,69 +1,40 @@
-# VR Urban Cardboard Demo — City Park
+# VR Urban Cardboard Demo - urbana.glb ajustado
 
-Demo Next.js + A-Frame para un recorrido VR/Cardboard usando la maqueta real:
-
-```txt
-city_park_at_sunset.glb
-```
-
-El archivo fue copiado a:
-
-```txt
-public/models/maqueta-urbana.glb
-```
-
-La ruta principal es:
-
-```txt
-/recorrido-vr
-```
+Proyecto de ejemplo para recorrer una maqueta urbana en modo VR/Cardboard usando Next.js y A-Frame.
 
 ## Qué incluye
 
-- Next.js con Webpack forzado para evitar bloqueos de Turbopack.
-- A-Frame local en `public/vendor/aframe-v1.7.1.min.js`.
-- Modelo `.glb` real del parque urbano.
-- Navegación por mirada.
-- Saltos entre puntos de vista.
-- Tres modos:
+- Modelo real cargado como `/public/models/maqueta-urbana.glb` a partir de `urbana.glb`.
+- Puntos ajustados al modelo:
+  1. Inicio del proyecto
+  2. Plaza central
+  3. Corredor peatonal
+  4. Ciclovía / plataforma lateral
+  5. Paradero de transporte / acceso sur
+  6. Área verde
+  7. Equipamiento urbano
+  8. Vista general final
+- Modos:
   - Vista maqueta
   - Vista peatonal
   - Vista guiada
-- Cálculo automático de rotación de cámara usando `cameraLookAt`.
+- Navegación por mirada: mirar una esfera durante 1.4 segundos activa el salto.
 
-## Instalar
+## Uso
 
 ```bash
 npm install
-```
-
-## Ejecutar en PC
-
-```bash
 npm run clean
-npm run dev:3001
+npm run dev:network
 ```
 
-Abrir:
+Abre en PC:
 
 ```txt
 http://localhost:3001/recorrido-vr
 ```
 
-## Ejecutar para celular en la misma red
-
-```bash
-npm run clean
-npm run dev:network
-```
-
-Busca tu IP real en Windows:
-
-```powershell
-ipconfig
-```
-
-Abre en el celular:
+Abre desde celular usando la IP real de tu computadora:
 
 ```txt
 http://TU-IP-REAL:3001/recorrido-vr
@@ -75,55 +46,16 @@ Ejemplo:
 http://192.168.1.50:3001/recorrido-vr
 ```
 
-No uses `localhost` en el celular.
-
-## Probar archivos desde el celular
-
-Primero valida que el celular pueda abrir estos recursos:
-
-```txt
-http://TU-IP-REAL:3001/vendor/aframe-v1.7.1.min.js
-http://TU-IP-REAL:3001/models/maqueta-urbana.glb
-```
-
-Si alguno no abre, el problema es red, IP, firewall o puerto.
-
-## Ajustar puntos de vista
-
-Edita:
+## Archivos clave
 
 ```txt
 src/data/urbanTour.js
+src/app/recorrido-vr/VRUrbanTour.jsx
+public/models/maqueta-urbana.glb
+ANALISIS_MAQUETA_URBANA.md
+ANALISIS_PUNTOS_URBANA.png
 ```
 
-Cada punto usa:
+## Nota de rendimiento
 
-```js
-cameraRigPosition: "x y z",
-cameraLookAt: "x y z",
-hotspotPosition: "x y z"
-```
-
-`cameraRigPosition` es dónde se coloca el usuario.
-
-`cameraLookAt` es hacia dónde mira al llegar.
-
-`hotspotPosition` es dónde aparece la esfera que activa el salto.
-
-## Nota sobre HTTPS y VR
-
-Para ver el modelo en navegador móvil por HTTP puede cargar la escena, pero algunas funciones de VR/WebXR pueden requerir HTTPS. Para una prueba real de Cardboard, lo ideal es publicar la demo en un servidor con HTTPS o usar un túnel HTTPS.
-
-```bash
-npm run tunnel
-```
-
-## Archivo de análisis
-
-Incluí el archivo:
-
-```txt
-ANALISIS_MAQUETA_CITY_PARK.md
-```
-
-Ahí está la lectura de dimensiones, puntos ajustados y recomendaciones para seguir calibrando.
+`urbana.glb` pesa aproximadamente 53 MB y contiene alrededor de 1.48 millones de caras. Para producción móvil/VR conviene generar una versión optimizada del modelo.

@@ -314,7 +314,7 @@ export default function VRUrbanTour() {
             <p className={styles.kicker}>Recorrido VR / Cardboard</p>
             <h1>Parque urbano VR</h1>
             <p className={styles.description}>
-              Modelo cargado: city_park_at_sunset.glb. Mira una esfera durante 1.4 segundos para saltar a esa zona.
+              Modelo cargado: {MODEL_INFO.sourceName}. Mira una esfera durante 1.4 segundos para saltar a esa zona.
             </p>
           </div>
 
@@ -401,9 +401,9 @@ export default function VRUrbanTour() {
           <a-entity
             id="urban-model-entity"
             gltf-model="#urban-model"
-            position="0 0 0"
-            rotation="0 0 0"
-            scale="1 1 1"
+            position={MODEL_INFO.modelPosition}
+            rotation={MODEL_INFO.modelRotation}
+            scale={MODEL_INFO.modelScale}
           ></a-entity>
 
           {visiblePoints.map((point) => (
