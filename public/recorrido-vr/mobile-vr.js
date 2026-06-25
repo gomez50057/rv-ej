@@ -34,6 +34,8 @@
       hotspotPosition: "-4.0 4.2 28.0",
       cameraRigPosition: "0.0 18.0 46.0",
       cameraLookAt: "-4.5 0.8 0.0",
+      mobileCameraRigPosition: "0.0 24.0 62.0",
+      mobileCameraLookAt: "-4.8 0.9 0.0",
       modes: ["maqueta", "guiada"],
       order: 1,
     },
@@ -45,6 +47,8 @@
       hotspotPosition: "-11.3 2.2 3.4",
       cameraRigPosition: "-13.8 1.65 8.0",
       cameraLookAt: "-11.3 1.0 3.4",
+      mobileCameraRigPosition: "-17.2 2.35 11.8",
+      mobileCameraLookAt: "-11.3 1.15 3.4",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 2,
     },
@@ -56,6 +60,8 @@
       hotspotPosition: "-3.5 2.2 13.5",
       cameraRigPosition: "-5.2 1.65 19.0",
       cameraLookAt: "-3.5 1.0 9.0",
+      mobileCameraRigPosition: "-6.4 2.45 25.5",
+      mobileCameraLookAt: "-3.5 1.15 9.0",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 3,
     },
@@ -67,6 +73,8 @@
       hotspotPosition: "2.1 4.0 3.8",
       cameraRigPosition: "6.8 3.25 9.5",
       cameraLookAt: "2.1 2.65 3.8",
+      mobileCameraRigPosition: "10.8 4.8 13.8",
+      mobileCameraLookAt: "2.1 2.75 3.8",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 4,
     },
@@ -78,6 +86,8 @@
       hotspotPosition: "-11.2 2.2 -25.5",
       cameraRigPosition: "-13.8 1.65 -29.2",
       cameraLookAt: "-11.2 1.0 -25.5",
+      mobileCameraRigPosition: "-16.2 2.35 -33.6",
+      mobileCameraLookAt: "-11.2 1.15 -25.5",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 5,
     },
@@ -89,6 +99,8 @@
       hotspotPosition: "-13.2 2.2 16.0",
       cameraRigPosition: "-15.6 1.65 20.5",
       cameraLookAt: "-13.2 1.0 16.0",
+      mobileCameraRigPosition: "-19.0 2.55 24.6",
+      mobileCameraLookAt: "-13.2 1.15 16.0",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 6,
     },
@@ -100,6 +112,8 @@
       hotspotPosition: "-12.2 2.2 -7.3",
       cameraRigPosition: "-14.4 1.65 -11.2",
       cameraLookAt: "-12.2 1.0 -7.3",
+      mobileCameraRigPosition: "-17.0 2.35 -14.8",
+      mobileCameraLookAt: "-12.2 1.15 -7.3",
       modes: ["maqueta", "peatonal", "guiada"],
       order: 7,
     },
@@ -111,6 +125,8 @@
       hotspotPosition: "-4.0 4.2 -28.5",
       cameraRigPosition: "8.5 18.0 -45.0",
       cameraLookAt: "-4.5 0.8 0.0",
+      mobileCameraRigPosition: "13.5 24.0 -62.0",
+      mobileCameraLookAt: "-4.8 0.9 0.0",
       modes: ["maqueta", "guiada"],
       order: 8,
     },
@@ -128,6 +144,27 @@
 
   function isLandscapeViewport() {
     return window.matchMedia("(orientation: landscape)").matches;
+  }
+
+  function shouldUseMobileCamera() {
+    return (
+      window.matchMedia("(max-width: 900px)").matches ||
+      window.matchMedia("(pointer: coarse)").matches
+    );
+  }
+
+  function getCameraRigPosition(point) {
+    if (!point) return "0 18 46";
+    return shouldUseMobileCamera()
+      ? point.mobileCameraRigPosition || point.cameraRigPosition
+      : point.cameraRigPosition;
+  }
+
+  function getCameraLookAt(point) {
+    if (!point) return "0 0 0";
+    return shouldUseMobileCamera()
+      ? point.mobileCameraLookAt || point.cameraLookAt
+      : point.cameraLookAt;
   }
 
   function syncViewportClasses() {
@@ -228,14 +265,17 @@
     const viewOffset = $("#view-offset");
     if (!rig || !viewOffset || !point) return;
 
+    const cameraRigPosition = getCameraRigPosition(point);
+    const cameraLookAt = getCameraLookAt(point);
+
     rig.setAttribute("animation__move", {
       property: "position",
-      to: point.cameraRigPosition,
+      to: cameraRigPosition,
       dur: 950,
       easing: "easeInOutQuad",
     });
 
-    const targetRotation = getRotationToLookAt(point.cameraRigPosition, point.cameraLookAt);
+    const targetRotation = getRotationToLookAt(cameraRigPosition, cameraLookAt);
     viewOffset.setAttribute("animation__rotate", {
       property: "rotation",
       to: targetRotation,
@@ -477,8 +517,19 @@
 
   function init() {
     syncViewportClasses();
-    window.addEventListener("resize", syncViewportClasses);
-    window.addEventListener("orientationchange", () => setTimeout(syncViewportClasses, 250));
+    window.addEventListener("resize", () => {
+      syncViewportClasses();
+      window.clearTimeout(window.__mobileCameraResizeTimer);
+      window.__mobileCameraResizeTimer = window.setTimeout(() => {
+        moveCameraToPoint(getActivePoint());
+      }, 180);
+    });
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        syncViewportClasses();
+        moveCameraToPoint(getActivePoint());
+      }, 300);
+    });
 
     setStatus("Buscando window.AFRAME...");
 

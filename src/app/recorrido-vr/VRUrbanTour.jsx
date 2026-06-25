@@ -33,21 +33,46 @@ function getRotationToLookAt(positionValue, targetValue) {
   return `${pitch.toFixed(2)} ${yaw.toFixed(2)} 0`;
 }
 
+function shouldUseMobileCamera() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(max-width: 900px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+function getCameraRigPosition(point) {
+  if (!point) return "0 18 46";
+  return shouldUseMobileCamera()
+    ? point.mobileCameraRigPosition || point.cameraRigPosition
+    : point.cameraRigPosition;
+}
+
+function getCameraLookAt(point) {
+  if (!point) return "0 0 0";
+  return shouldUseMobileCamera()
+    ? point.mobileCameraLookAt || point.cameraLookAt
+    : point.cameraLookAt;
+}
+
 function moveCameraToPoint(point) {
   const rig = document.querySelector("#camera-rig");
   const viewOffset = document.querySelector("#view-offset");
 
   if (!rig || !viewOffset || !point) return;
 
+  const cameraRigPosition = getCameraRigPosition(point);
+  const cameraLookAt = getCameraLookAt(point);
+
   rig.setAttribute("animation__move", {
     property: "position",
-    to: point.cameraRigPosition,
+    to: cameraRigPosition,
     dur: 950,
     easing: "easeInOutQuad",
   });
 
-  const targetRotation = point.cameraLookAt
-    ? getRotationToLookAt(point.cameraRigPosition, point.cameraLookAt)
+  const targetRotation = cameraLookAt
+    ? getRotationToLookAt(cameraRigPosition, cameraLookAt)
     : point.cameraRotation || "0 0 0";
 
   viewOffset.setAttribute("animation__rotate", {
@@ -572,6 +597,7 @@ export default function VRUrbanTour() {
             <a-entity id="view-offset" rotation="-24.78 0 0">
               <a-camera
                 id="camera-head"
+                camera="fov: 72; near: 0.05; far: 180; zoom: 1"
                 look-controls="pointerLockEnabled: false; magicWindowTrackingEnabled: true"
                 wasd-controls-enabled="false"
               >

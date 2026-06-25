@@ -110,3 +110,14 @@ Para mejor compatibilidad Cardboard/WebXR, probar también con HTTPS mediante t�
 npm run dev:network
 npm run tunnel
 ```
+
+## Ajuste de cámara móvil
+
+La ruta estática `/recorrido-vr/index.html` ahora usa una cámara inicial más abierta para móvil:
+
+- posición inicial: `0 24 62`
+- rotación inicial aproximada: `-20.38 4.43 0`
+- FOV: `72`
+- near/far: `0.05 / 180`
+
+Cada punto del recorrido tiene posiciones móviles propias (`mobileCameraRigPosition` y `mobileCameraLookAt`). En teléfono o pantalla táctil se usan automáticamente para evitar encuadres demasiado pegados al modelo.
