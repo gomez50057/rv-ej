@@ -1,4 +1,4 @@
-import VRUrbanTour from "./VRUrbanTour";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Recorrido VR | Maqueta Urbana",
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <VRUrbanTour />;
+  redirect("/recorrido-vr/index.html");
 }

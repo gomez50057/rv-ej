@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#101820" />
+    <title>Recorrido VR / Cardboard | Maqueta urbana</title>
+    <link rel="stylesheet" href="/recorrido-vr/mobile-vr.css" />
+    <script src="/vendor/aframe-v1.7.1.min.js"></script>
+    <script defer src="/recorrido-vr/mobile-vr.js"></script>
+  </head>
+  <body>
+    <div id="boot" class="boot">
+      <div class="boot-card">
+        <p class="kicker">VR / Cardboard</p>
+        <h1>Inicializando visor estático</h1>
+        <p>
+          Esta versión no depende de React ni de Next para cargar A-Frame en móvil.
+        </p>
+        <p id="boot-status" class="boot-status">Verificando visor...</p>
+      </div>
+    </div>
+
+    <main id="app" class="app is-hidden">
+      <section id="overlay" class="overlay">
+        <div class="top-card">
+          <div>
+            <p class="kicker">Recorrido VR / Cardboard</p>
+            <h1>Maqueta urbana interactiva</h1>
+            <p class="description">
+              Mira una esfera durante 1.4 segundos para saltar a esa zona.
+            </p>
+          </div>
+          <button id="toggle-panel" type="button" class="ghost-button">
+            Ocultar panel
+          </button>
+        </div>
+
+        <div class="mode-panel">
+          <h2>Modos</h2>
+          <div id="mode-buttons" class="mode-buttons"></div>
+          <p id="mode-help" class="mode-help"></p>
+        </div>
+
+        <div class="info-panel">
+          <h2>Punto actual</h2>
+          <h3 id="point-title">Inicio del proyecto</h3>
+          <p id="point-description"></p>
+
+          <div class="guide-controls">
+            <button id="previous-point" type="button">Anterior</button>
+            <button id="next-point" type="button">Siguiente</button>
+          </div>
+
+          <div id="point-list" class="point-list"></div>
+        </div>
+      </section>
+
+      <div id="model-pill" class="model-pill">
+        Cargando maqueta urbana. El archivo pesa aprox. 53 MB; en celular puede tardar.
+      </div>
+
+      <div class="lens-controls">
+        <button id="lens-button" type="button" class="lens-button">
+          Entrar modo lentes / VR
+        </button>
+        <p id="lens-message">
+          Presiona el botón para solicitar pantalla completa y modo VR/Cardboard.
+        </p>
+      </div>
+
+      <a-scene
+        id="scene"
+        embedded
+        vr-mode-ui="enabled: false"
+        xr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: true"
+        loading-screen="enabled: false"
+        renderer="antialias: false; colorManagement: true; precision: mediump; powerPreference: high-performance"
+        raycaster="objects: .clickable; far: 120"
+      >
+        <a-sky color="#101820"></a-sky>
+
+        <a-light type="ambient" intensity="0.95"></a-light>
+        <a-light type="directional" intensity="1.15" position="4 8 6"></a-light>
+        <a-light type="point" intensity="0.35" position="-4 4 2"></a-light>
+
+        <a-entity
+          id="urban-model"
+          gltf-model="/models/maqueta-urbana.glb"
+          position="0 -6.235643 0"
+          rotation="0 0 0"
+          scale="1 1 1"
+        ></a-entity>
+
+        <a-entity id="hotspots"></a-entity>
+
+        <a-entity id="camera-rig" position="0 18 46">
+          <a-entity id="view-offset" rotation="-21.55 5.36 0">
+            <a-camera
+              id="camera-head"
+              look-controls="pointerLockEnabled: false; magicWindowTrackingEnabled: true"
+              wasd-controls-enabled="false"
+            >
+              <a-entity position="0 -0.58 -1.4">
+                <a-plane
+                  width="1.7"
+                  height="0.34"
+                  color="#000000"
+                  opacity="0.52"
+                  material="transparent: true"
+                ></a-plane>
+                <a-text
+                  id="vr-point-label"
+                  value="Punto: Inicio del proyecto"
+                  align="center"
+                  position="0 0 0.01"
+                  color="#ffffff"
+                  width="1.58"
+                ></a-text>
+              </a-entity>
+
+              <a-cursor
+                fuse="true"
+                fuse-timeout="1400"
+                raycaster="objects: .clickable; far: 120"
+                geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.022"
+                material="color: white; shader: flat"
+              ></a-cursor>
+            </a-camera>
+          </a-entity>
+        </a-entity>
+      </a-scene>
+    </main>
+  </body>
+</html>

@@ -1,26 +1,20 @@
-# VR Urban Cardboard Demo - urbana.glb ajustado
+# VR Urban Cardboard Demo — urbana.glb
 
-Proyecto de ejemplo para recorrer una maqueta urbana en modo VR/Cardboard usando Next.js y A-Frame.
+Demo de recorrido VR/Cardboard para una maqueta urbana usando Next.js + A-Frame.
 
-## Qué incluye
+## Corrección de esta versión
 
-- Modelo real cargado como `/public/models/maqueta-urbana.glb` a partir de `urbana.glb`.
-- Puntos ajustados al modelo:
-  1. Inicio del proyecto
-  2. Plaza central
-  3. Corredor peatonal
-  4. Ciclovía / plataforma lateral
-  5. Paradero de transporte / acceso sur
-  6. Área verde
-  7. Equipamiento urbano
-  8. Vista general final
-- Modos:
-  - Vista maqueta
-  - Vista peatonal
-  - Vista guiada
-- Navegación por mirada: mirar una esfera durante 1.4 segundos activa el salto.
+Esta versión ya no carga A-Frame con un script dinámico desde el componente. Ahora A-Frame se carga de forma estática desde el layout con:
 
-## Uso
+```txt
+/public/vendor/aframe-v1.7.1.min.js
+```
+
+El componente solo verifica `window.AFRAME` y no se queda indefinidamente en “Inicializando A-Frame”. Si A-Frame no aparece en 12 segundos, muestra diagnóstico y botón de recarga.
+
+También se retiró el uso de `<a-assets>` para el modelo grande, porque en móvil puede bloquear la escena mientras descarga el GLB. Ahora el modelo se carga directamente con `gltf-model="/models/maqueta-urbana.glb"` y se muestra un aviso independiente mientras carga.
+
+## Ejecutar
 
 ```bash
 npm install
@@ -28,34 +22,51 @@ npm run clean
 npm run dev:network
 ```
 
-Abre en PC:
+Abrir en PC:
 
 ```txt
 http://localhost:3001/recorrido-vr
 ```
 
-Abre desde celular usando la IP real de tu computadora:
+Abrir en celular usando la IP real de tu PC:
 
 ```txt
 http://TU-IP-REAL:3001/recorrido-vr
 ```
 
-Ejemplo:
+No uses `localhost` desde el celular.
+
+## Prueba de archivos desde celular
+
+Abre estas rutas desde el celular:
 
 ```txt
-http://192.168.1.50:3001/recorrido-vr
+http://TU-IP-REAL:3001/vendor/aframe-v1.7.1.min.js
+http://TU-IP-REAL:3001/models/maqueta-urbana.glb
 ```
 
-## Archivos clave
+Si alguna no carga, el problema es IP, puerto, firewall o red.
+
+## Nota sobre móvil
+
+El modelo `urbana.glb` pesa aproximadamente 53 MB y tiene más de 1 millón de vértices. En celulares puede tardar o fallar por memoria. La versión final para Cardboard debería exportarse optimizada o low-poly.
+
+## Versión móvil más robusta
+
+Si en teléfono se queda en “Verificando A-Frame”, usa directamente la ruta estática:
 
 ```txt
-src/data/urbanTour.js
-src/app/recorrido-vr/VRUrbanTour.jsx
-public/models/maqueta-urbana.glb
-ANALISIS_MAQUETA_URBANA.md
-ANALISIS_PUNTOS_URBANA.png
+http://TU-IP-REAL:3001/recorrido-vr/index.html
 ```
 
-## Nota de rendimiento
+Esta versión evita React/Next para cargar A-Frame en móvil. La ruta `/recorrido-vr` redirige automáticamente a esa página estática.
 
-`urbana.glb` pesa aproximadamente 53 MB y contiene alrededor de 1.48 millones de caras. Para producción móvil/VR conviene generar una versión optimizada del modelo.
+Pruebas desde el teléfono:
+
+```txt
+http://TU-IP-REAL:3001/vendor/aframe-v1.7.1.min.js
+http://TU-IP-REAL:3001/models/maqueta-urbana.glb
+http://TU-IP-REAL:3001/recorrido-vr/mobile-vr.js
+```
+
+Si esas rutas no abren, el problema es IP, puerto, firewall o red. Si abren, la página estática debe inicializar el visor.

@@ -10,8 +10,28 @@ import {
   getPreviousGuidedPoint,
 } from "@/data/urbanTour";
 
-const AFRAME_LOCAL = "/vendor/aframe-v1.7.1.min.js";
-const AFRAME_CDN = "https://aframe.io/releases/1.7.1/aframe.min.js";
+function parseVec3(value) {
+  if (!value || typeof value !== "string") return null;
+  const [x, y, z] = value.split(" ").map(Number);
+  if ([x, y, z].some((item) => Number.isNaN(item))) return null;
+  return { x, y, z };
+}
+
+function getRotationToLookAt(positionValue, targetValue) {
+  const position = parseVec3(positionValue);
+  const target = parseVec3(targetValue);
+
+  if (!position || !target) return "0 0 0";
+
+  const dx = target.x - position.x;
+  const dy = target.y - position.y;
+  const dz = target.z - position.z;
+  const horizontal = Math.sqrt(dx * dx + dz * dz) || 0.0001;
+  const pitch = Math.atan2(dy, horizontal) * (180 / Math.PI);
+  const yaw = Math.atan2(-dx, -dz) * (180 / Math.PI);
+
+  return `${pitch.toFixed(2)} ${yaw.toFixed(2)} 0`;
+}
 
 function moveCameraToPoint(point) {
   const rig = document.querySelector("#camera-rig");
@@ -36,53 +56,6 @@ function moveCameraToPoint(point) {
     dur: 950,
     easing: "easeInOutQuad",
   });
-}
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`);
-
-    if (existing) {
-      if (window.AFRAME) {
-        resolve();
-        return;
-      }
-
-      existing.addEventListener("load", resolve, { once: true });
-      existing.addEventListener("error", reject, { once: true });
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = src;
-    script.async = true;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-}
-
-function parseVec3(value) {
-  if (!value || typeof value !== "string") return null;
-  const [x, y, z] = value.split(" ").map(Number);
-  if ([x, y, z].some((item) => Number.isNaN(item))) return null;
-  return { x, y, z };
-}
-
-function getRotationToLookAt(positionValue, targetValue) {
-  const position = parseVec3(positionValue);
-  const target = parseVec3(targetValue);
-
-  if (!position || !target) return "0 0 0";
-
-  const dx = target.x - position.x;
-  const dy = target.y - position.y;
-  const dz = target.z - position.z;
-  const horizontal = Math.sqrt(dx * dx + dz * dz) || 0.0001;
-  const pitch = Math.atan2(dy, horizontal) * (180 / Math.PI);
-  const yaw = Math.atan2(-dx, -dz) * (180 / Math.PI);
-
-  return `${pitch.toFixed(2)} ${yaw.toFixed(2)} 0`;
 }
 
 function registerAFrameComponents() {
@@ -140,18 +113,44 @@ function getRuntimeDiagnostics() {
     url: window.location.href,
     isSecureContext: window.isSecureContext,
     hasAframe: Boolean(window.AFRAME),
+    aframeVersion: window.AFRAME?.version || null,
     protocol: window.location.protocol,
     host: window.location.host,
     userAgent: window.navigator.userAgent,
   };
 }
 
+async function requestMobileFullscreen() {
+  const element = document.documentElement;
+
+  try {
+    if (!document.fullscreenElement && element.requestFullscreen) {
+      await element.requestFullscreen();
+    }
+  } catch (error) {
+    // En móvil puede bloquearse por permisos o por no estar en HTTPS.
+  }
+
+  try {
+    if (window.screen?.orientation?.lock) {
+      await window.screen.orientation.lock("landscape");
+    }
+  } catch (error) {
+    // No es obligatorio para entrar al modo lentes.
+  }
+}
+
 export default function VRUrbanTour() {
-  const [aframeStatus, setAframeStatus] = useState("loading");
+  const [aframeStatus, setAframeStatus] = useState("checking");
+  const [modelStatus, setModelStatus] = useState("pending");
   const [activeMode, setActiveMode] = useState("maqueta");
   const [activePointId, setActivePointId] = useState("inicio");
   const [uiCompact, setUiCompact] = useState(false);
   const [diagnostics, setDiagnostics] = useState(null);
+  const [isLensMode, setIsLensMode] = useState(false);
+  const [lensMessage, setLensMessage] = useState(
+    "Presiona el botón para activar pantalla VR/Cardboard."
+  );
 
   const aframeReady = aframeStatus === "ready";
   const aframeFailed = aframeStatus === "error";
@@ -178,56 +177,34 @@ export default function VRUrbanTour() {
 
   useEffect(() => {
     let mounted = true;
-    let finished = false;
+    let attempts = 0;
+    const maxAttempts = 80; // 80 x 150 ms = 12 segundos.
 
-    const finishReady = () => {
-      if (!mounted || finished) return;
-      finished = true;
-      const registered = registerAFrameComponents();
-      setDiagnostics(getRuntimeDiagnostics());
-      setAframeStatus(registered ? "ready" : "error");
+    const verifyAFrame = () => {
+      if (!mounted) return;
+
+      if (window.AFRAME) {
+        const registered = registerAFrameComponents();
+        setDiagnostics(getRuntimeDiagnostics());
+        setAframeStatus(registered ? "ready" : "error");
+        return;
+      }
+
+      attempts += 1;
+
+      if (attempts >= maxAttempts) {
+        setDiagnostics(getRuntimeDiagnostics());
+        setAframeStatus("error");
+        return;
+      }
+
+      window.setTimeout(verifyAFrame, 150);
     };
 
-    const finishError = () => {
-      if (!mounted || finished) return;
-      finished = true;
-      setDiagnostics(getRuntimeDiagnostics());
-      setAframeStatus("error");
-    };
-
-    const hardTimeout = window.setTimeout(() => {
-      finishError();
-    }, 12000);
-
-    if (window.AFRAME) {
-      window.clearTimeout(hardTimeout);
-      finishReady();
-      return () => {
-        mounted = false;
-        window.clearTimeout(hardTimeout);
-      };
-    }
-
-    loadScript(AFRAME_LOCAL)
-      .then(() => {
-        window.clearTimeout(hardTimeout);
-        finishReady();
-      })
-      .catch(() => {
-        loadScript(AFRAME_CDN)
-          .then(() => {
-            window.clearTimeout(hardTimeout);
-            finishReady();
-          })
-          .catch(() => {
-            window.clearTimeout(hardTimeout);
-            finishError();
-          });
-      });
+    verifyAFrame();
 
     return () => {
       mounted = false;
-      window.clearTimeout(hardTimeout);
     };
   }, []);
 
@@ -247,9 +224,149 @@ export default function VRUrbanTour() {
   }, []);
 
   useEffect(() => {
+    if (!aframeReady) return;
+
+    let scene = null;
+
+    const attachSceneListeners = () => {
+      scene = document.querySelector("a-scene");
+      if (!scene) return;
+
+      const handleEnter = () => {
+        setIsLensMode(true);
+        setUiCompact(true);
+        setLensMessage("Modo lentes activo. Coloca el celular en el visor.");
+      };
+
+      const handleExit = () => {
+        setIsLensMode(false);
+        setLensMessage("Saliste del modo lentes.");
+      };
+
+      scene.addEventListener("enter-vr", handleEnter);
+      scene.addEventListener("exit-vr", handleExit);
+
+      scene.__vrDemoCleanup = () => {
+        scene.removeEventListener("enter-vr", handleEnter);
+        scene.removeEventListener("exit-vr", handleExit);
+      };
+    };
+
+    const frame = window.requestAnimationFrame(attachSceneListeners);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (scene?.__vrDemoCleanup) {
+        scene.__vrDemoCleanup();
+      }
+    };
+  }, [aframeReady]);
+
+  useEffect(() => {
+    if (!aframeReady) return;
+
+    let model = null;
+
+    const attachModelListeners = () => {
+      model = document.querySelector("#urban-model-entity");
+      if (!model) return;
+
+      const handleLoaded = () => {
+        setModelStatus("loaded");
+        window.requestAnimationFrame(() => moveCameraToPoint(activePoint));
+      };
+
+      const handleError = () => {
+        setModelStatus("error");
+      };
+
+      model.addEventListener("model-loaded", handleLoaded);
+      model.addEventListener("model-error", handleError);
+
+      // Si el modelo ya está montado cuando conectamos el listener.
+      if (model.getObject3D && model.getObject3D("mesh")) {
+        handleLoaded();
+      }
+
+      model.__modelCleanup = () => {
+        model.removeEventListener("model-loaded", handleLoaded);
+        model.removeEventListener("model-error", handleError);
+      };
+    };
+
+    setModelStatus("loading");
+    const frame = window.requestAnimationFrame(attachModelListeners);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (model?.__modelCleanup) {
+        model.__modelCleanup();
+      }
+    };
+  }, [aframeReady, activePoint]);
+
+  useEffect(() => {
     if (!aframeReady || !activePoint) return;
     window.requestAnimationFrame(() => moveCameraToPoint(activePoint));
   }, [aframeReady, activePoint]);
+
+  const handleEnterLensMode = async () => {
+    const scene = document.querySelector("a-scene");
+
+    if (!aframeReady || !scene) {
+      setLensMessage("La escena todavía no está lista. Espera unos segundos.");
+      return;
+    }
+
+    setUiCompact(true);
+    setLensMessage("Activando modo lentes...");
+    await requestMobileFullscreen();
+
+    try {
+      if (typeof scene.enterVR === "function") {
+        const result = scene.enterVR();
+        if (result && typeof result.then === "function") {
+          await result;
+        }
+
+        setIsLensMode(true);
+        setLensMessage(
+          "Modo lentes solicitado. Si no ves pantalla dividida, prueba con HTTPS y Android Chrome/Samsung Internet."
+        );
+        return;
+      }
+
+      setLensMessage("Este navegador cargó la maqueta, pero no expone scene.enterVR().");
+    } catch (error) {
+      setIsLensMode(false);
+      setLensMessage(
+        "El navegador bloqueó VR/Cardboard. Prueba con HTTPS, Android Chrome/Samsung Internet y permisos de sensores."
+      );
+    }
+  };
+
+  const handleExitLensMode = async () => {
+    const scene = document.querySelector("a-scene");
+
+    try {
+      if (scene && typeof scene.exitVR === "function") {
+        scene.exitVR();
+      }
+    } catch (error) {
+      // No bloquea la salida manual.
+    }
+
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      // Algunos navegadores no permiten salir por script.
+    }
+
+    setIsLensMode(false);
+    setLensMessage("Modo lentes desactivado.");
+  };
 
   const handleModeChange = (modeId) => {
     const modeConfig = TOUR_MODES.find((mode) => mode.id === modeId);
@@ -284,8 +401,11 @@ export default function VRUrbanTour() {
         <div className={styles.loadingOverlay}>
           <div className={styles.loadingCard}>
             <p className={styles.kicker}>VR / Cardboard</p>
-            <h1>Cargando experiencia...</h1>
-            <p>Inicializando A-Frame desde archivo local para compatibilidad móvil.</p>
+            <h1>Preparando visor...</h1>
+            <p>
+              Verificando A-Frame cargado desde <strong>/vendor/aframe-v1.7.1.min.js</strong>.
+              Si no aparece la escena en unos segundos, se mostrará diagnóstico.
+            </p>
           </div>
         </div>
       )}
@@ -294,17 +414,30 @@ export default function VRUrbanTour() {
         <div className={styles.errorOverlay}>
           <div className={styles.loadingCard}>
             <p className={styles.kicker}>Error de carga</p>
-            <h1>No se pudo cargar A-Frame</h1>
+            <h1>No se detectó A-Frame</h1>
             <p>
-              Revisa que estés entrando desde una URL accesible para el celular y que el
-              archivo <strong>/vendor/aframe-v1.7.1.min.js</strong> exista en la carpeta
-              <strong> public/vendor/</strong>.
+              Abre directamente <strong>/vendor/aframe-v1.7.1.min.js</strong> desde el celular. Si no carga,
+              el problema es la URL, IP, puerto o firewall. Si sí carga, recarga esta página.
             </p>
-
+            <button className={styles.retryButton} type="button" onClick={() => window.location.reload()}>
+              Recargar experiencia
+            </button>
             {diagnostics && (
               <pre className={styles.debugBox}>{JSON.stringify(diagnostics, null, 2)}</pre>
             )}
           </div>
+        </div>
+      )}
+
+      {aframeReady && modelStatus === "loading" && (
+        <div className={styles.modelLoadingPill}>
+          Cargando maqueta urbana de {MODEL_INFO.sourceName}. El archivo pesa aprox. 53 MB; en celular puede tardar.
+        </div>
+      )}
+
+      {aframeReady && modelStatus === "error" && (
+        <div className={styles.modelErrorPill}>
+          No se pudo cargar <strong>{MODEL_INFO.file}</strong>. Prueba abrir esa ruta desde el celular.
         </div>
       )}
 
@@ -378,20 +511,28 @@ export default function VRUrbanTour() {
         </section>
       </div>
 
+      <div className={styles.lensControls}>
+        <button
+          type="button"
+          className={styles.lensButton}
+          onClick={isLensMode ? handleExitLensMode : handleEnterLensMode}
+          disabled={!aframeReady}
+        >
+          {isLensMode ? "Salir de modo lentes" : "Entrar modo lentes / VR"}
+        </button>
+        <p>{lensMessage}</p>
+      </div>
+
       {aframeReady && (
         <a-scene
           embedded
-          vr-mode-ui="enabled: true"
-          xr-mode-ui="enabled: true"
+          vr-mode-ui="enabled: false"
+          xr-mode-ui="enabled: false"
           device-orientation-permission-ui="enabled: true"
           loading-screen="enabled: false"
           renderer="antialias: false; colorManagement: true; precision: mediump; powerPreference: high-performance"
           raycaster="objects: .clickable; far: 120"
         >
-          <a-assets timeout="30000">
-            <a-asset-item id="urban-model" src={MODEL_INFO.file}></a-asset-item>
-          </a-assets>
-
           <a-sky color="#101820"></a-sky>
 
           <a-light type="ambient" intensity="0.95"></a-light>
@@ -400,7 +541,7 @@ export default function VRUrbanTour() {
 
           <a-entity
             id="urban-model-entity"
-            gltf-model="#urban-model"
+            gltf-model={MODEL_INFO.file}
             position={MODEL_INFO.modelPosition}
             rotation={MODEL_INFO.modelRotation}
             scale={MODEL_INFO.modelScale}
